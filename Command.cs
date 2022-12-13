@@ -33,13 +33,12 @@ namespace RAB_Session_05_Challenge
             string setPath = "";
             string typePath = "";
 
-            TaskDialog.Show("Start", "Select the furniture set CSV file.");
+            TaskDialog.Show("Start", "First select the furniture set CSV file. Next, select the furniture type CSV file.");
             Forms.OpenFileDialog setFile = new Forms.OpenFileDialog();
             setFile.InitialDirectory = "C:\\";
             setFile.Multiselect = false;
             setFile.Filter = "CSV Files|*.csv";
 
-            TaskDialog.Show("Start", "Next, select the furniture type CSV file.");
             Forms.OpenFileDialog typeFile = new Forms.OpenFileDialog();
             typeFile.InitialDirectory = "C:\\";
             typeFile.Multiselect = false;
