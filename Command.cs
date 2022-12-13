@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Forms = System.Windows.Forms;
 
 #endregion
 
@@ -26,22 +27,65 @@ namespace RAB_Session_05_Challenge
             Application app = uiapp.Application;
             Document doc = uidoc.Document;
 
+            // NOTE: Remember to add the System.Windows.Forms reference
+
             // part 1. - get data into list of classes
-            List<string[]> furnitureTypes = GetFurnitureTypes();
-            List<string[]> furnitureSets = GetFurnitureSets();
+            string setPath = "";
+            string typePath = "";
+
+            TaskDialog.Show("Start", "Select the furniture set CSV file.");
+            Forms.OpenFileDialog setFile = new Forms.OpenFileDialog();
+            setFile.InitialDirectory = "C:\\";
+            setFile.Multiselect = false;
+            setFile.Filter = "CSV Files|*.csv";
+
+            TaskDialog.Show("Start", "Next, select the furniture type CSV file.");
+            Forms.OpenFileDialog typeFile = new Forms.OpenFileDialog();
+            typeFile.InitialDirectory = "C:\\";
+            typeFile.Multiselect = false;
+            typeFile.Filter = "CSV Files|*.csv";
+
+            if (setFile.ShowDialog() == Forms.DialogResult.OK)
+            {
+                setPath = setFile.FileName;
+            }
+
+            if (typeFile.ShowDialog() == Forms.DialogResult.OK)
+            {
+                typePath = typeFile.FileName;
+            }
+
+            if(setPath == "" || typePath == "")
+            {
+                TaskDialog.Show("Error", "Please select a set and type file.");
+                return Result.Failed;
+            }
+
+            // read text files
+            string[] setArray = System.IO.File.ReadAllLines(setPath);
+            string[] typeArray = System.IO.File.ReadAllLines(typePath);
 
             List<FurnitureType> furnitureTypeList = new List<FurnitureType>();
             List<FurnitureSet> furnitureSetList = new List<FurnitureSet>();
 
-            foreach (string[] type in furnitureTypes)
+            foreach (string typeData in typeArray)
             {
+                string[] type = typeData.Split(',');
                 FurnitureType currentType = new FurnitureType(type[0], type[1], type[2]);
                 furnitureTypeList.Add(currentType);
             }
 
-            foreach (string[] set in furnitureSets)
+            foreach (string setData in setArray)
             {
-                FurnitureSet currentSet = new FurnitureSet(set[0], set[1], set[2]);
+                // use a count argument in the .split statement to get only the first three instance of the split
+                char[] separator = { ',' };
+                Int32 splitCount = 3;
+                string[] set = setData.Split(separator, splitCount);
+
+                // some cleanup is required of the furniture list string. 
+                string furnList = set[2].Replace("\"", "");
+
+                FurnitureSet currentSet = new FurnitureSet(set[0], set[1], furnList);
                 furnitureSetList.Add(currentSet);
             }
 
