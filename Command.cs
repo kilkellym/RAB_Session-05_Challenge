@@ -8,6 +8,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Forms = System.Windows.Forms;
+using Excel = OfficeOpenXml;
+using OfficeOpenXml;
 
 #endregion
 
@@ -26,23 +29,60 @@ namespace RAB_Session_05_Challenge
             Application app = uiapp.Application;
             Document doc = uidoc.Document;
 
-            // part 1. - get data into list of classes
-            List<string[]> furnitureTypes = GetFurnitureTypes();
-            List<string[]> furnitureSets = GetFurnitureSets();
+            // NOTE: Remember to add the EPPlus library using the NuGet Package Manager
 
+            // part 0: prompt user to select Excel file
+            Forms.OpenFileDialog selectFile = new Forms.OpenFileDialog();
+            selectFile.Filter = "Excel files|*.xls;*.xlsx;*.xlsm";
+            selectFile.InitialDirectory = "C:\\";
+            selectFile.Multiselect = false;
+
+            string excelFile = "";
+
+            if (selectFile.ShowDialog() == Forms.DialogResult.OK)
+                excelFile = selectFile.FileName;
+
+            if (excelFile == "")
+            {
+                TaskDialog.Show("Error", "Please select an Excel file.");
+                return Result.Failed;
+            }
+
+            // set EPPlus license context
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+
+            // open Excel file
+            ExcelPackage excel = new ExcelPackage(excelFile);
+            ExcelWorkbook workbook = excel.Workbook;
+            ExcelWorksheet setWS = workbook.Worksheets[0];
+            ExcelWorksheet typeWS = workbook.Worksheets[1];
+
+            // get row and column count
+            int setRows = setWS.Dimension.Rows;
+            int typeRows = typeWS.Dimension.Rows;
+
+            // part 1: get data into list of classes
             List<FurnitureType> furnitureTypeList = new List<FurnitureType>();
             List<FurnitureSet> furnitureSetList = new List<FurnitureSet>();
 
-            foreach (string[] type in furnitureTypes)
+            for (int i = 1; i <= setRows; i++)
             {
-                FurnitureType currentType = new FurnitureType(type[0], type[1], type[2]);
-                furnitureTypeList.Add(currentType);
+                string setName = setWS.Cells[i, 1].Value.ToString();
+                string setRoom = setWS.Cells[i, 2].Value.ToString();
+                string setFurn = setWS.Cells[i, 3].Value.ToString();
+
+                FurnitureSet curSet = new FurnitureSet(setName, setRoom, setFurn);
+                furnitureSetList.Add(curSet);
             }
 
-            foreach (string[] set in furnitureSets)
+            for (int j = 1; j <= typeRows; j++)
             {
-                FurnitureSet currentSet = new FurnitureSet(set[0], set[1], set[2]);
-                furnitureSetList.Add(currentSet);
+                string typeName = typeWS.Cells[j, 1].Value.ToString();
+                string typeFamily = typeWS.Cells[j, 2].Value.ToString();
+                string typeType = typeWS.Cells[j, 3].Value.ToString();
+
+                FurnitureType curType = new FurnitureType(typeName, typeFamily, typeType);
+                furnitureTypeList.Add(curType);
             }
 
             furnitureTypeList.RemoveAt(0);
